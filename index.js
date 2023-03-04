@@ -1,21 +1,22 @@
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
+
 const app = express();
 require('dotenv').config();
 
 const Person = require('./models/person');
 
-const requestLogger = (req, res, next) => {
-  console.log('Method:', req.method);
-  console.log('Path:  ', req.path);
-  console.log('Body:  ', req.body);
-  console.log('---');
-  next();
-};
+// const requestLogger = (req, res, next) => {
+//   console.log('Method:', req.method);
+//   console.log('Path:  ', req.path);
+//   console.log('Body:  ', req.body);
+//   console.log('---');
+//   next();
+// };
 
 const unknownEndpoint = (req, res) => {
-  response.status(404).send({ error: 'unknown endpoint' });
+  res.status(404).send({ error: 'unknown endpoint' });
 };
 
 const errorHandler = (err, req, res, next) => {
@@ -23,7 +24,8 @@ const errorHandler = (err, req, res, next) => {
     return res.status(404).send({
       error: 'malformattered id',
     });
-  } else if (err.name === 'ValidationError') {
+  }
+  if (err.name === 'ValidationError') {
     return res.status(400).json({
       error: err.message,
     });
@@ -32,31 +34,27 @@ const errorHandler = (err, req, res, next) => {
 };
 app.use(cors());
 app.use(express.json());
-app.use(requestLogger);
+// app.use(requestLogger);
 app.use(express.static('build'));
 
-morgan.token('body', (req) => {
-  return JSON.stringify(req.body);
-});
+morgan.token('body', (req) => JSON.stringify(req.body));
 
 app.use(
-  morgan(':method :url :status :res[content-length] - :response-time ms :body')
+  morgan(':method :url :status :res[content-length] - :response-time ms :body'),
 );
 
-let persons = [];
+const persons = [];
 
 app.get('/api/persons', (req, res, next) => {
   Person.find({})
-    .then((persons) => res.json(persons))
+    .then((p) => res.json(p))
     .catch((err) => next(err));
 });
 
 app.get('/info', (req, res, next) => {
   Person.find({})
-    .then((persons) =>
-      res.send(`<p>Phonebook has info for ${persons.length} people</p> 
-            <p>${new Date()}</p>`)
-    )
+    .then((p) => res.send(`<p>Phonebook has info for ${p.length} people</p> 
+            <p>${new Date()}</p>`))
     .catch((err) => next(err));
 });
 
@@ -70,7 +68,7 @@ app.get('/api/persons/:id', (req, res, next) => {
 
 app.delete('/api/persons/:id', (req, res, next) => {
   Person.findByIdAndRemove(req.params.id)
-    .then((result) => {
+    .then(() => {
       res.status(204).end();
     })
     .catch((error) => next(error));
@@ -86,7 +84,7 @@ app.put('/api/persons/:id', (req, res, next) => {
       new: true,
       runValidators: true,
       context: 'query',
-    }
+    },
   )
     .then((updatedNote) => {
       res.json(updatedNote);
@@ -103,11 +101,13 @@ app.post('/api/persons', (req, res, next) => {
     return res.status(400).json({
       error: 'Name missing',
     });
-  } else if (!body.number) {
+  }
+  if (!body.number) {
     return res.status(400).json({
       error: 'Number missing',
     });
-  } else if (checkPerson) {
+  }
+  if (checkPerson) {
     return res.status(409).json({
       error: 'name must be unique',
     });
@@ -118,7 +118,7 @@ app.post('/api/persons', (req, res, next) => {
     number: body.number,
   });
 
-  person
+  return person
     .save()
     .then((savedPerson) => {
       res.json(savedPerson);

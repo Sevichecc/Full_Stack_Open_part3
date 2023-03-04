@@ -4,7 +4,7 @@ mongoose.set('strictQuery', false);
 
 const url = process.env.MONGODB_URI;
 
-console.log('Connecting to', url);
+// console.log('Connecting to', url)
 
 mongoose
   .connect(url)
@@ -15,14 +15,14 @@ const personSchema = new mongoose.Schema({
   name: {
     type: String,
     minLength: [3, 'Name must be at least 3 characters'],
-    required: [true, "Person's name is required"],
+    required: [true, 'Person\'s name is required'],
   },
   number: {
     type: String,
     minLength: [8, 'Phone number must be at least 8 characters'],
     required: [true, 'Phone number is required'],
     validate: {
-      validator: function (v) {
+      validator(v) {
         return /^\d{2}\d?-\d{5,}$/.test(v);
       },
       message: (props) => {
