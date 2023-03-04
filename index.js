@@ -19,10 +19,13 @@ const unknownEndpoint = (req, res) => {
 };
 
 const errorHandler = (err, req, res, next) => {
-  console.log(err.message);
-  if ((err.name = 'CastError')) {
+  if (err.name === 'CastError') {
     return res.status(404).send({
       error: 'malformattered id',
+    });
+  } else if (err.name === 'ValidationError') {
+    return res.status(400).json({
+      error: err.message,
     });
   }
   next(err);
@@ -74,16 +77,17 @@ app.delete('/api/persons/:id', (req, res, next) => {
 });
 
 app.put('/api/persons/:id', (req, res, next) => {
-  const { body } = req;
+  const { name, number } = req.body;
 
-  const person = {
-    name: body.name,
-    number: body.number,
-  };
-
-  Person.findByIdAndUpdate(req.params.id, person, {
-    new: true,
-  })
+  Person.findByIdAndUpdate(
+    req.params.id,
+    { name, number },
+    {
+      new: true,
+      runValidators: true,
+      context: 'query',
+    }
+  )
     .then((updatedNote) => {
       res.json(updatedNote);
     })
